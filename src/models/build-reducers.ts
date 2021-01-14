@@ -1,6 +1,16 @@
 import { assertAllCasesCovered } from '../assert-all-cases-covered';
-import { buyBasicRace, buyTerranPsionic, chooseAdaptabilityFocus, choosePowerLevel, chooseStartingLevel } from './build-actions';
-import { baseCharacterSheet, CharacterSheet, PowerLevel, Skills } from './character-sheet';
+import { backgrounds } from './backgrounds';
+import {
+    BackgroundBuyParams,
+    buyBackground,
+    buyBasicRace,
+    buyTerranPsionic,
+    chooseAdaptabilityFocus,
+    choosePowerLevel,
+    chooseStartingLevel
+} from './build-actions';
+import { Abilities, baseCharacterSheet, CharacterSheet, PowerLevel, Skills } from './character-sheet';
+import { getModifier } from './modifier';
 import { BasicRace, BasicRaceData, TerranPsionicData, TerranPsionicType } from './race';
 import { createReducer, on } from './reducer';
 
@@ -12,6 +22,7 @@ export const reducer = createReducer(
     on(buyBasicRace, reduceBuyBasicRace),
     on(buyTerranPsionic, reduceBuyTerranPsionic),
     on(chooseAdaptabilityFocus, reduceChooseAdaptibilityFocus),
+    on(buyBackground, reduceBuyBackground),
 );
 
 export function reduceChoosePowerLevel(sheet: CharacterSheet, payload: PowerLevel, prevalidateOnly: boolean): CharacterSheet {
@@ -141,6 +152,7 @@ export function reduceBuyTerranPsionic(sheet: CharacterSheet, payload: TerranPsi
     };
 
     newSheet.derivedStats.psiLevel = psiLevelPerType[payload];
+    newSheet.psychicType = 'uncontrolled';
 
     newSheet.abilities = {
         agility: 2,
@@ -167,15 +179,63 @@ export function reduceChooseAdaptibilityFocus(sheet: CharacterSheet, payload: ke
     return newSheet;
 }
 
+export function reduceBuyBackground(sheet: CharacterSheet, payload: BackgroundBuyParams, prevalidateOnly: boolean): CharacterSheet {
+    if (sheet.creationStage < 1) {
+        throw new Error('Must be in creation stage 1');
+    }
+
+    if (prevalidateOnly) {
+        return sheet;
+    }
+
+    const newSheet: CharacterSheet = {
+        ...sheet,
+    };
+
+    newSheet.background = payload.background;
+
+    const bgnd = backgrounds[payload.background];
+    console.log('bgnd', backgrounds);
+
+    const abilities = Object.keys(newSheet.abilities) as (keyof Abilities)[];
+
+    abilities.forEach(x => {
+        const mod = bgnd.abilityScore[x];
+        if (!mod) {
+            return;
+        }
+        const v = getModifier(sheet, mod);
+        newSheet.abilities[x] += v;
+    });
+
+    if (bgnd.abilityScoreChoice) {
+        if (!payload.abilityChoice) {
+            throw new Error('Background requires ability choice to increase');
+        }
+        if (!bgnd.abilityScoreChoice[payload.abilityChoice]) {
+            throw new Error(`Background cannot be bought with the specified ability choice (${payload.abilityChoice})`);
+        }
+        const mod = bgnd.abilityScoreChoice[payload.abilityChoice];
+        if (!mod) {
+            throw new Error('Background did not specify a modifier for ability choice');
+        }
+        const v = getModifier(sheet, mod);
+
+        const x = payload.abilityChoice;
+
+        newSheet.abilities[x] += v;
+    }
+
+    return newSheet;
+}
+
 function validateSheet(sheet: CharacterSheet) {
+    const soFarSoGood = () => Object.keys(sheet.validation).length === 0;
+
     sheet.validation = {};
 
     if (!sheet.race) {
         sheet.validation.race = 'No race selected';
-    }
-
-    if (sheet.cp > sheet.abilities.intelligence) {
-        sheet.validation.cp = `Too many leftover cp (${sheet.cp}) max is (${sheet.abilities.intelligence})`;
     }
 
     if ((sheet.race === 'terran' || sheet.race === 'terran-psionic') && !sheet.adaptabilityFocus) {
@@ -190,5 +250,23 @@ function validateSheet(sheet: CharacterSheet) {
         sheet.validation.powerLevel = 'Must choose campaign power level';
     }
 
-    sheet.creationStage = 1;
+    if (soFarSoGood()) {
+        sheet.creationStage = 1;
+    }
+
+    if (!sheet.background) {
+        sheet.validation.background = 'Must choose background';
+    }
+
+    if (sheet.background === 'ghost' && !sheet.loadout) {
+        sheet.validation.loadout = 'Must choose loadout (sanctioned or rogue ghost)';
+    }
+
+    if (soFarSoGood()) {
+        sheet.creationStage = 2;
+    }
+
+    if (sheet.cp > sheet.abilities.intelligence) {
+        sheet.validation.cp = `Too many leftover cp (${sheet.cp}) max is (${sheet.abilities.intelligence})`;
+    }
 }

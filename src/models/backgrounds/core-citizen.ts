@@ -1,4 +1,3 @@
-import { contacts, urbanFamiliarity } from '../special-ability';
 import { Background } from './backgrounds';
 
 export const coreCitizen: Background = {
@@ -7,10 +6,14 @@ export const coreCitizen: Background = {
         agility: 1,
         intelligence: 1,
     },
+    abilityScoreChoice: {
+        willpower: 1,
+        instinct: 1,
+    },
     cost: 5,
-    specialAbility: [
-        contacts,
-        urbanFamiliarity,
+    specialAbilities: [
+        'contacts',
+        'urban-familiarity',
     ],
     wealth: 500,
     description: 'The character is from one of the core Confederate or Dominion planets. Being raised amongst high population ' +

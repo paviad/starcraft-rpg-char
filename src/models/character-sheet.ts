@@ -1,3 +1,6 @@
+import { backgrounds } from './backgrounds';
+import { specialAbilities } from './special-abilities';
+
 export interface Abilities {
     strength: number;
     instinct: number;
@@ -70,12 +73,25 @@ export interface CharacterSheet {
     // Terran Specific
     adaptabilityFocus?: keyof Skills;
 
+    // Terran Psychic Specific
+    psychicType?: 'controlled' | 'uncontrolled';
+
+    // Background
+    background?: keyof typeof backgrounds;
+
+    // Ghost Specific
+    loadout?: 'sanctioned-ghost' | 'rogue-ghost';
+    sanctionedGhostCredits?: number;
+
     // Derived stats
     derivedStats: DerivedStats;
 
     // Skills
     skills: Skills;
     focusSkills: Focus;
+
+    // Special Abilities
+    specialAbilities: (keyof typeof specialAbilities)[];
 
     // Talents
 
@@ -147,6 +163,9 @@ export const baseCharacterSheet: CharacterSheet = {
 
     focusSkills: {
     },
+
+    // Special Abilities
+    specialAbilities: [],
 
     validation: {},
 };

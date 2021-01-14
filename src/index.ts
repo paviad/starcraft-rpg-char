@@ -1,4 +1,4 @@
-import { buyBasicRace, buyTerranPsionic, chooseAdaptabilityFocus, choosePowerLevel, chooseStartingLevel } from './models/build-actions';
+import { buyBackground, buyBasicRace, buyTerranPsionic, chooseAdaptabilityFocus, choosePowerLevel, chooseStartingLevel } from './models/build-actions';
 import { reducer } from './models/build-reducers';
 import { baseCharacterSheet, CharacterSheet } from './models/character-sheet';
 
@@ -10,6 +10,10 @@ a = reducer(a, choosePowerLevel('heroic'));
 a = reducer(a, chooseStartingLevel(5));
 a = reducer(a, buyTerranPsionic('telekinetic'));
 a = reducer(a, chooseAdaptabilityFocus('melee'));
+a = reducer(a, buyBackground({
+    background: 'ghost',
+    specialAbilityChoice: 'rogue-ghost',
+}));
 
 console.log(a);
 

@@ -1,21 +1,26 @@
 import { Abilities } from '../character-sheet';
 import { Modifier } from '../modifier';
-import { SpecialAbility } from '../special-ability';
 import { coreCitizen } from './core-citizen';
+import { ghost } from './ghost';
 
 type AbilityModifier = {
-    [key in keyof Abilities]?: Modifier;
+    [key in keyof Abilities]?: Modifier<number>;
 };
 
 export interface Background {
     name: string;
-    cost: Modifier;
+    prerequisites?: { [key: string]: string };
+    cost: Modifier<number>;
     abilityScore: AbilityModifier;
-    specialAbility: SpecialAbility[];
-    wealth: Modifier;
+    abilityScoreChoice?: AbilityModifier;
+    specialAbilities: string[];
+    specialAbilitiesChoice?: string[];
+    bonusTalent?: string;
+    wealth?: Modifier<number>;
     description?: string;
 }
 
-export const backgrounds: { [key: string]: Background } = {
+export const backgrounds = {
     'core-citizen': coreCitizen,
+    'ghost': ghost,
 };
